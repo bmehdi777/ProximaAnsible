@@ -1,0 +1,7 @@
+---
+# task for haproxy
+
+- name: Install haproxy
+  state: present
+  pkg:
+    - haproxy
