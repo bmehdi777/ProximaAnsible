@@ -1,0 +1,60 @@
+---
+- name: Deploy grafana docker container
+  docker_container:
+    state: started
+    restart_policy: always
+    name: grafana
+    image: grafana/grafana:latest
+    network_mode: host
+    volumes:
+      - grafana:/var/lib/grafana
+  tags: grafana
+
+- name: Check if defined password is working
+  uri:
+    url: https://grafana.proxima.bentouati.net/api/users
+    user: admin
+    password: "{{ grafana_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200,401
+  register: grafana_check_password
+  until: grafana_check_password.status != -1
+  tags: grafana
+
+- name: Change password
+  uri:
+    url: https://grafana.proxima.bentouati.net/api/user/password
+    user: admin
+    password: "{{ grafana_default_password }}"
+    method: PUT
+    body: '{"oldPassword": "{{ grafana_default_password }}", "newPassword": "{{ grafana_password }}", "confirmNew": "{{ grafana_password }}"}'
+    force_basic_auth: yes
+    status_code: 200
+    body_format: json
+  when: grafana_check_password.status == 401
+  tags: grafana
+
+- name: Check prometheus datasource presence
+  uri:
+    url: https://grafana.proxima.bentouati.net/api/datasources/name/prometheus
+    user: admin
+    password: "{{ grafana_password }}"
+    method: GET
+    force_basic_auth: yes
+    status_code: 200,404
+  register: grafana_check_datasource 
+  tags: grafana
+
+- name: Add prometheus datasource
+  uri:
+    url: https://grafana.proxima.bentouati.net/api/datasources
+    user: admin
+    password: "{{ grafana_password }}"
+    method: POST
+    body: '{"name":"prometheus", "type":"prometheus", "url":"https://prometheus.proxima.bentouati.net", "access":"proxy", "basicAuth":true, "basicAuthUser": "admin", "secureJsonData":{"basicAuthPassword":"{{ grafana_password }}"}}'
+    force_basic_auth: yes
+    status_code: 200
+    body_format: json
+  when: grafana_check_datasource.status == 404
+  tags: grafana

@@ -1,0 +1,3 @@
+---
+grafana_default_password: "admin"
+grafana_password: "$P@ssw0rd"
