@@ -19,7 +19,7 @@
     restart_policy: always
     name: prometheus
     image: "prom/prometheus"
-    networkd_mode: host
+    network_mode: host
     volumes:
       - prometheus:/prometheus
       - /etc/prometheus:/etc/prometheus

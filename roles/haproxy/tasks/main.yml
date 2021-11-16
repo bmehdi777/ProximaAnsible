@@ -27,7 +27,7 @@
   iptables:
     chain: INPUT
     protocol: tcp
-    destionation_port: "443"
+    destination_port: "443"
     jump: ACCEPT
   when: iptables_enable | default(True)
   tags: haproxy
