@@ -21,5 +21,58 @@
       - vim
       - wget
       - curl
+      - iptables
   when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+  tags: common
+
+- name: Set policy to ACCEPT for INPUT iptables chain
+  iptables:
+    chain: INPUT
+    policy: ACCEPT
+  when: iptables_enable | default(True)
+  tags: common
+
+- name: Flush iptables
+  iptables:
+    table: filter
+    chain: "{{ item  }}"
+    flush: yes
+  loop:
+    - "INPUT"
+    - "FORWARD"
+    - "OUTPUT"
+  when: iptables_enable | default(True)
+  tags: common
+
+- name: Allow tcp established connection
+  iptables:
+    chain: INPUT
+    protocol: all
+    ctstate: [ESTABLISHED, RELATED]
+    jump: ACCEPT
+  when: iptables_enable | default(True)
+  tags: common
+
+- name: Allow icmp in INPUT iptables chain
+  iptables:
+    chain: INPUT
+    protocol: icmp
+    jump: ACCEPT
+  when: iptables_enable | default(True)
+  tags: common
+
+- name: Allow ssh in INPUT iptables chain
+  iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: "22"
+    jump: ACCEPT
+  when: iptables_enable | default(True)
+  tags: common
+
+- name: Set policy to DROP for INPUT iptables chain
+  iptables:
+    chain: INPUT
+    policy: DROP
+  when: iptables_enable | default(True)
   tags: common
