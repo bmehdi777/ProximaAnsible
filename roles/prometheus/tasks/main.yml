@@ -1,0 +1,29 @@
+---
+- name: Create /etc/prometheus
+  file:
+    path: /etc/prometheus
+    state: directory
+    mode: 0755
+  tags: prometheus
+
+- name: Generate conf
+  template:
+    src: prometheus.yml
+    dest: /etc/prometheus/prometheus.yml
+  notify: Reload prometheus
+  tags: prometheus
+
+- name: Deploy prometheus container
+  docker_container:
+    state: started
+    restart_policy: always
+    name: prometheus
+    image: "prom/prometheus"
+    networkd_mode: host
+    volumes:
+      - prometheus:/prometheus
+      - /etc/prometheus:/etc/prometheus
+    command: >-
+              --config.file=/etc/prometheus/prometheus.yml
+  register: prom_container_result
+  tags: prometheus

@@ -1,0 +1,3 @@
+---
+- name: Reload prometheus
+  command: kill -SIGHUP {{ prom_container_result.container.State.Pid  }}
