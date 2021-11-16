@@ -1,0 +1,11 @@
+- name: Proxima
+  remote_user: debian
+  hosts: proxima
+  become: true
+  roles:
+    - common
+    - docker
+    - haproxy
+    - prometheus
+    - grafana
+    - sourcegraph
