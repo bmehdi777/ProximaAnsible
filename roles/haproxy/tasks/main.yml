@@ -1,10 +1,10 @@
 ---
 # task for haproxy
-
 - name: Install haproxy
-  state: present
-  pkg:
-    - haproxy
+  apt:
+    state: present
+    pkg:
+      - haproxy
   tags: haproxy
 
 - name: Generate configuration
