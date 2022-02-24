@@ -6,6 +6,7 @@
     - common
     - docker
     - haproxy
+    - node-exporter
     - prometheus
     - grafana
-    - sourcegraph
+    - rootfs

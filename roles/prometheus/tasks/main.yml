@@ -8,8 +8,11 @@
 
 - name: Generate conf
   template:
-    src: prometheus.yml
-    dest: /etc/prometheus/prometheus.yml
+    src: "{{item.local}}"
+    dest: "{{item.remote}}"
+  loop:
+    - {local: "prometheus.yml", remote: "/etc/prometheus/prometheus.yml"}
+    - {local: "web.yml", remote: "/etc/prometheus/web.yml"}
   notify: Reload prometheus
   tags: prometheus
 
@@ -19,11 +22,12 @@
     restart_policy: always
     name: prometheus
     image: "prom/prometheus"
-    network_mode: host
+    ports:
+      - "9090:9090"
     volumes:
       - prometheus:/prometheus
       - /etc/prometheus:/etc/prometheus
     command: >-
-              --config.file=/etc/prometheus/prometheus.yml
+              --config.file=/etc/prometheus/prometheus.yml --web.config.file=/etc/prometheus/web.yml
   register: prom_container_result
   tags: prometheus

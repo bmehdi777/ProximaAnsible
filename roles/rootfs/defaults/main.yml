@@ -1,0 +1,12 @@
+---
+rootfs_location: "/home/debian/rootfs"
+rootfs_size: "5G"
+rootfs_mount_location: "/mnt/rootfs"
+rootfs_packages:
+  - vim
+  - tcpdump
+  - netcat
+  - haveged # https://wiki.debian.org/BoottimeEntropyStarvation
+  - openssh-server
+  - curl
+  - wget

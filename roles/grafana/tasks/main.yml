@@ -5,14 +5,15 @@
     restart_policy: always
     name: grafana
     image: grafana/grafana:latest
-    network_mode: host
+    ports:
+      - "3000:3000"
     volumes:
       - grafana:/var/lib/grafana
   tags: grafana
 
 - name: Check if defined password is working
   uri:
-    url: https://grafana.proxima.bentouati.net/api/users
+    url: http://grafana.proxima.bentouati.net/api/users
     user: admin
     password: "{{ grafana_password }}"
     method: GET
@@ -20,11 +21,12 @@
     status_code: 200,401
   register: grafana_check_password
   until: grafana_check_password.status != -1
+  ignore_errors: yes
   tags: grafana
 
 - name: Change password
   uri:
-    url: https://grafana.proxima.bentouati.net/api/user/password
+    url: http://grafana.proxima.bentouati.net/api/user/password
     user: admin
     password: "{{ grafana_default_password }}"
     method: PUT
@@ -33,11 +35,12 @@
     status_code: 200
     body_format: json
   when: grafana_check_password.status == 401
+  ignore_errors: yes
   tags: grafana
 
 - name: Check prometheus datasource presence
   uri:
-    url: https://grafana.proxima.bentouati.net/api/datasources/name/prometheus
+    url: http://grafana.proxima.bentouati.net/api/datasources/name/prometheus
     user: admin
     password: "{{ grafana_password }}"
     method: GET
@@ -48,11 +51,11 @@
 
 - name: Add prometheus datasource
   uri:
-    url: https://grafana.proxima.bentouati.net/api/datasources
+    url: http://grafana.proxima.bentouati.net/api/datasources
     user: admin
     password: "{{ grafana_password }}"
     method: POST
-    body: '{"name":"prometheus", "type":"prometheus", "url":"https://prometheus.proxima.bentouati.net", "access":"proxy", "basicAuth":true, "basicAuthUser": "admin", "secureJsonData":{"basicAuthPassword":"{{ grafana_password }}"}}'
+    body: '{"name":"prometheus", "type":"prometheus", "url":"http://prometheus.proxima.bentouati.net", "access":"proxy", "basicAuth":true, "basicAuthUser": "admin", "secureJsonData":{"basicAuthPassword":"{{ grafana_password }}"}}'
     force_basic_auth: yes
     status_code: 200
     body_format: json

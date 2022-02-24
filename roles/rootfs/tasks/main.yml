@@ -1,0 +1,63 @@
+---
+- name: Install require
+  apt:
+    name: debootstrap
+    state: present
+  tags: rootfs
+- name: Check if rootfs exist
+  stat:
+    path: "{{ rootfs_location }}"
+  register: rootfs_file
+  tags: rootfs
+- name: Generate empty file
+  command: "fallocate -l {{ rootfs_size }} {{ rootfs_location }}"
+  when: not rootfs_file.stat.exists
+  tags: rootfs
+- name: Format rootfs file
+  filesystem:
+    dev: "{{ rootfs_location }}"
+    fstype: ext4
+  when: not rootfs_file.stat.exists
+  tags: rootfs
+- name: Mount rootfs file
+  mount:
+    src: "{{ rootfs_location }}"
+    path: "{{ rootfs_mount_location }}"
+    state: mounted
+    fstype: ext4
+    opts: loop
+  tags: rootfs
+- name: Check if /root exist in rootfs
+  stat:
+    path: "{{ rootfs_mount_location }}/root"
+  register: rootfs_file
+  tags: rootfs
+- name: Execute debootstrap
+  command: "debootstrap stable {{ rootfs_mount_location }} https://deb.debian.org/debian"
+  when: not rootfs_file.stat.exists
+  tags: rootfs
+- name: Put custom script in the rootfs
+  copy:
+    content: |
+      #!/bin/bash
+      set -e -x
+      passwd -d root
+      sed -i '/^ExecStart/ s/^#*/#/' /lib/systemd/system/serial-getty@.service
+      sed -i '/^#ExecStart/aExecStart=-/sbin/agetty -o '\''-p -- \\\\u'\'' --autologin root --keep-baud 115200,38400,9600 %I \$TERM' /lib/systemd/system/serial-getty@.service
+      apt-get update
+      apt-get upgrade -y
+      apt-get install vim tcpdump netcat haveged openssh-server -y
+      apt-get install -y {{ rootfs_packages | join(' ') }}      
+    dest: "{{ rootfs_mount_location }}/root/custom.sh"
+    mode: 0755
+  when: not rootfs_file.stat.exists
+  tags: rootfs
+- name: Execute custom script in the rootfs
+  command: "chroot {{ rootfs_mount_location }} /root/custom.sh"
+  when: not rootfs_file.stat.exists
+  tags: rootfs
+- name: Unmount rootfs file
+  mount:
+    path: "{{ rootfs_mount_location }}"
+    state: absent
+  tags: rootfs

@@ -75,6 +75,14 @@
   when: iptables_enable | default(True)
   tags: common
 
+- name: Allow connections localhost to localhost
+  iptables:
+    chain: INPUT
+    in_interface: "lo"
+    jump: ACCEPT
+  when: iptables_enable | default(True)
+  tags: common
+
 - name: Set policy to DROP for INPUT iptables chain
   iptables:
     chain: INPUT
